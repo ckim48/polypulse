@@ -1,0 +1,193 @@
+from flask import Flask, render_template, request, jsonify, flash
+from openai import OpenAI
+import pytesseract
+from PIL import Image
+import os
+import re
+import sqlite3
+from werkzeug.security import generate_password_hash, check_password_hash
+
+app = Flask(__name__)
+
+# Initialize OpenAI client
+
+# OCR and analysis
+@app.route('/image-upload', methods=['GET', 'POST'])
+def image_upload():
+    analysis = ""
+    if request.method == 'POST':
+        img = request.files['image']
+        if img:
+            path = os.path.join('static', img.filename)
+            img.save(path)
+            text = pytesseract.image_to_string(Image.open(path))
+            analysis = gpt_analyze(text)
+    return render_template('image_upload.html', analysis=analysis)
+
+# Chat with GPT
+@app.route('/chat', methods=['GET', 'POST'])
+def chat():
+    messages = []
+    if request.method == 'POST':
+        user_input = request.form['message']
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a supportive emotional assistant for families."},
+                {"role": "user", "content": user_input}
+            ]
+        )
+        reply = response.choices[0].message.content
+        messages = [(user_input, reply)]
+    return render_template('chat.html', messages=messages)
+
+# Analyze form page (GET)
+@app.route('/analyze', methods=['GET'])
+def analyze_page():
+    return render_template('analyze.html')
+
+# Analyze multiple lines and return structured JSON (POST)
+@app.route('/analyze', methods=['POST'])
+def analyze():
+    results = []
+
+    uploaded_file = request.files.get('file')
+    input_text = request.form.get('message', '')
+
+    if uploaded_file:
+        content = uploaded_file.read().decode('utf-8')
+        input_text += '\n' + content
+
+    lines = [line.strip() for line in input_text.split('\n') if line.strip()]
+
+    for line in lines:
+        prompt = f"""
+        You are an emotional communication expert.
+
+        - Line: "{line}"
+        Is this line harmful in a family setting? If so, explain why and suggest a healthier way to say it.
+
+        Format:
+        - Category: ...
+        - Explanation: ...
+        - Suggested Alternative: ...
+        If the line is not harmful, respond with "- Category: None"
+        """
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        raw = response.choices[0].message.content
+
+        # Extract parts from response
+        category = extract_section(raw, "Category")
+        explanation = extract_section(raw, "Explanation")
+        suggestion = extract_section(raw, "Suggested Alternative")
+
+        if category and category.lower() != "none":
+            results.append({
+                "original": line,
+                "category": category,
+                "explanation": explanation,
+                "suggestion": suggestion
+            })
+
+    return jsonify({"results": results})
+
+# Helper function to extract structured parts from GPT output
+def extract_section(text, keyword):
+    for line in text.splitlines():
+        if line.startswith(f"- {keyword}:"):
+            return line.replace(f"- {keyword}:", "").strip()
+    return ""
+
+# Text analysis using GPT for OCR or bulk input
+def gpt_analyze(text):
+    prompt = f"""
+    You are an emotional communication expert.
+
+    Analyze the following multi-line message (which may contain multiple statements from a parent or a child).
+    Identify only the lines that are emotionally harmful, judgmental, shaming, dismissive, or manipulative — especially in a family context.
+
+    For each problematic line:
+    - Quote the original line.
+    - Explain why it's harmful.
+    - Suggest a more emotionally supportive alternative for either the parent or the child.
+
+    If a line is fine, ignore it.
+
+    Text to analyze:
+    {text}
+
+    Format the output like this:
+    - Line: "..."
+    - Why it's harmful: ...
+    - Better way to say it: ...
+    """
+
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[
+            {"role": "user", "content": prompt}
+        ]
+    )
+    return response.choices[0].message.content
+
+# Landing page
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        name = request.form['name']
+        username = request.form['username']
+        password = request.form['password']
+        role = request.form['role']
+
+        hashed_password = generate_password_hash(password)
+
+        try:
+            conn = sqlite3.connect('users.db')
+            c = conn.cursor()
+            c.execute('INSERT INTO users (name, username, password, role) VALUES (?, ?, ?, ?)',
+                      (name, username, hashed_password, role))
+            conn.commit()
+            conn.close()
+            flash('Account created successfully!', 'success')
+            return redirect(url_for('login'))
+        except sqlite3.IntegrityError:
+            flash('Username already exists. Please choose another.', 'danger')
+
+    return render_template('signup.html')
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['email']  # or `username`, depending on your form
+        password = request.form['password']
+
+        conn = sqlite3.connect('users.db')
+        c = conn.cursor()
+        c.execute('SELECT id, name, password, role FROM users WHERE username = ?', (username,))
+        user = c.fetchone()
+        conn.close()
+
+        if user and check_password_hash(user[2], password):
+            session['user_id'] = user[0]
+            session['name'] = user[1]
+            session['role'] = user[3]
+            flash('Login successful!', 'success')
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid credentials. Try again.', 'danger')
+
+    return render_template('login.html')
+
+
+if __name__ == '__main__':
+    app.run(debug=True)

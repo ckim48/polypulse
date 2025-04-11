@@ -1,0 +1,23 @@
+<form method="POST" action="/signup">
+  <div class="mb-3">
+    <label>Full Name</label>
+    <input type="text" class="form-control" name="name" required />
+  </div>
+  <div class="mb-3">
+    <label>Username</label>
+    <input type="text" class="form-control" name="username" required />
+  </div>
+  <div class="mb-3">
+    <label>Password</label>
+    <input type="password" class="form-control" name="password" required />
+  </div>
+  <div class="mb-3">
+    <label>Are you a...</label>
+    <select class="form-select" name="role" required>
+      <option value="" disabled selected>Select one</option>
+      <option value="child">Child</option>
+      <option value="parent">Parent</option>
+    </select>
+  </div>
+  <button type="submit" class="btn btn-custom w-100">Sign Up</button>
+</form>
