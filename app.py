@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, flash
+from flask import Flask, render_template, request, jsonify, flash,session,redirect,url_for
 from openai import OpenAI
 import pytesseract
 from PIL import Image
@@ -8,7 +8,7 @@ import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-
+app.secret_key = '1234'
 # Initialize OpenAI client
 
 # OCR and analysis
@@ -23,6 +23,46 @@ def image_upload():
             text = pytesseract.image_to_string(Image.open(path))
             analysis = gpt_analyze(text)
     return render_template('image_upload.html', analysis=analysis)
+
+
+@app.route('/profile')
+def profile():
+    if 'user_id' not in session:
+        flash('Please log in to view your profile.', 'warning')
+        return redirect(url_for('login'))
+
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('SELECT name, username, role FROM users WHERE id = ?', (session['user_id'],))
+    user = c.fetchone()
+    # Example: fetch analysis results from session or dummy for demo
+    insights = session.get("insights", [
+        {"original": "You're always lazy.", "category": "Judgmental", "explanation": "It labels the child negatively.",
+         "suggestion": "I've noticed you seem tired lately, is everything okay?"},
+        {"original": "Stop crying, it’s nothing.", "category": "Dismissive", "explanation": "It invalidates emotions.",
+         "suggestion": "I see you're upset. Do you want to talk about it?"}
+    ])
+
+    # Count categories for chart
+    category_count = {}
+    for item in insights:
+        cat = item["category"]
+        category_count[cat] = category_count.get(cat, 0) + 1
+
+    conn.close()
+
+    if user:
+        return render_template(
+            'profile.html',
+            name=user[0],
+            username=user[1],
+            role=user[2],
+            insights=insights,
+            category_count=category_count
+        )
+    else:
+        flash('User not found.', 'danger')
+        return redirect(url_for('index'))
 
 # Chat with GPT
 @app.route('/chat', methods=['GET', 'POST'])
@@ -168,7 +208,7 @@ def signup():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['email']  # or `username`, depending on your form
+        username = request.form['username']  # or `username`, depending on your form
         password = request.form['password']
 
         conn = sqlite3.connect('users.db')
