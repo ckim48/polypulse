@@ -2,19 +2,49 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>My Profile</title>
+  <title>PolyPulse | My Profile</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    .profile-card {
-      border-radius: 1rem;
-    }
-    .section-title {
-      font-weight: 600;
-      font-size: 1.3rem;
-      margin-bottom: 1rem;
-    }
+  .profile-card {
+    border-radius: 1rem;
+  }
+  .section-title {
+    font-weight: 600;
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+  #insightChart {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+    .table {
+  border-collapse: separate;
+  border-spacing: 0 0.4rem;
+
+}
+.table td,
+.table th {
+  background-color: #fff !important;
+  border: none;
+  padding: 1rem 1rem; /* Add spacing inside cells */
+  vertical-align: middle;
+}
+
+.table thead th {
+  background-color: #f8f9fa !important;
+  font-weight: 600;
+}
+  .custom-bordered-table {
+    border: 2px solid #dee2e6; /* Bootstrap light border */
+    border-radius: 0.5rem;
+  }
+  .custom-bordered-table th,
+  .custom-bordered-table td {
+    border: none !important; /* Hide inner borders */
+  }
   </style>
 </head>
 <body>
@@ -33,11 +63,50 @@
           <li class="list-group-item"><strong>Username:</strong> {{ username }}</li>
           <li class="list-group-item"><strong>Role:</strong> {{ role }}</li>
         </ul>
-        <a href="{{ url_for('index') }}" class="btn btn-outline-primary mt-4">
-          <i class="bi bi-house-door me-1"></i>Back to Home
+        <a href="{{ url_for('analyze') }}" class="btn btn-outline-primary mt-4">
+          <i class="bi bi-search me-1"></i>Back to Analyze
         </a>
       </div>
+<div class="card mt-4 shadow rounded-4 border-0 p-4">
+  <div class="d-flex align-items-center mb-3">
+    <i class="bi bi-graph-up-arrow me-2 text-primary fs-4"></i>
+    <h5 class="mb-0 fw-semibold">Last Analysis Summary</h5>
+  </div>
+  <ul class="list-unstyled mb-0 ps-1">
+    <li class="mb-2">
+      <span class="fw-medium text-secondary">Total Harmful Lines:</span>
+      <span class="fw-semibold text-dark">{{ insights|length }}</span>
+    </li>
+    <li class="mb-2">
+      <span class="fw-medium text-secondary">Most Frequent Category:</span>
+      <span class="fw-semibold text-dark">{{ most_frequent }}</span>
+    </li>
+    <li class="mb-3">
+      <span class="fw-medium text-secondary">Happiness Score:</span>
+    </li>
+    <li>
+      <div class="text-center">
+        {% if happiness_score >= 80 %}
+          <i class="bi bi-emoji-smile text-success fs-1 bounce"></i><br>
+          <span class="badge bg-success fs-6 mt-2 px-4 py-2">{{ happiness_score }}%</span>
+        {% elif happiness_score >= 50 %}
+          <i class="bi bi-emoji-neutral text-warning fs-1 bounce"></i><br>
+          <span class="badge bg-warning text-dark fs-6 mt-2 px-4 py-2">{{ happiness_score }}%</span>
+        {% else %}
+          <i class="bi bi-emoji-frown text-danger fs-1 bounce"></i><br>
+          <span class="badge bg-danger fs-6 mt-2 px-4 py-2">{{ happiness_score }}%</span>
+        {% endif %}
+      </div>
+    </li>
+  </ul>
+</div>
+
+
+
     </div>
+
+
+
 
     <!-- Right Column: Family Insight -->
     <div class="col-md-8">
@@ -47,30 +116,46 @@
         </div>
 
         {% if insights %}
-          <canvas id="insightChart" height="150"></canvas>
-
-          <div class="table-responsive mt-4">
-            <table class="table table-bordered table-sm align-middle">
-              <thead class="table-secondary">
-                <tr>
-                  <th scope="col">Line</th>
-                  <th scope="col">Category</th>
-                  <th scope="col">Explanation</th>
-                  <th scope="col">Suggestion</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for insight in insights %}
-                <tr>
-                  <td>{{ insight.original }}</td>
-                  <td>{{ insight.category }}</td>
-                  <td>{{ insight.explanation }}</td>
-                  <td>{{ insight.suggestion }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+          <div style="max-width: 350px; margin: 0 auto;">
+            <canvas id="insightChart"></canvas>
           </div>
+
+<div class="table-responsive mt-4">
+  <table class="table table-hover table-striped table-sm align-middle table-bordered rounded-3 overflow-hidden shadow-sm custom-bordered-table">
+    <thead class="table-light text-center">
+      <tr>
+        <th scope="col">Line</th>
+        <th scope="col">Category</th>
+        <th scope="col">Explanation</th>
+        <th scope="col">Suggestion</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for insight in insights %}
+      <tr>
+        <td>{{ insight.original }}</td>
+
+<td class="fw-semibold
+  {% if insight.category|lower == 'judgmental' %}text-danger
+  {% elif insight.category|lower == 'dismissive' %}text-warning
+  {% elif insight.category|lower == 'shaming' %}text-secondary
+  {% elif insight.category|lower == 'manipulative' %}text-dark
+  {% else %}text-primary
+  {% endif %}
+">
+  {{ insight.category }}
+</td>
+
+
+        <td>{{ insight.explanation }}</td>
+        <td class="text-success">{{ insight.suggestion }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+
         {% else %}
           <p>No analysis data yet. Try uploading or analyzing family conversations in the <a href="/analyze">Analyze</a> section.</p>
         {% endif %}
@@ -84,10 +169,10 @@
   const chart = new Chart(ctx, {
     type: 'pie',
     data: {
-      labels: {{ category_count.keys()|list }},
+      labels: {{ category_count.keys()|list|tojson }},
       datasets: [{
         label: 'Harmful Categories',
-        data: {{ category_count.values()|list }},
+        data: {{ category_count.values()|list|tojson }},
         borderWidth: 1
       }]
     },
@@ -101,6 +186,8 @@
     }
   });
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>
