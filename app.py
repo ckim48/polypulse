@@ -10,7 +10,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 app.secret_key = '1234'
 # Initialize OpenAI client
-
 # OCR and analysis
 @app.route('/image-upload', methods=['GET', 'POST'])
 def image_upload():
@@ -24,7 +23,6 @@ def image_upload():
             analysis = gpt_analyze(text)
     return render_template('image_upload.html', analysis=analysis)
 
-
 @app.route('/profile')
 def profile():
     if 'user_id' not in session:
@@ -33,21 +31,37 @@ def profile():
 
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
+
+    # Fetch user information
     c.execute('SELECT name, username, role FROM users WHERE id = ?', (session['user_id'],))
     user = c.fetchone()
-    # Example: fetch analysis results from session or dummy for demo
-    insights = session.get("insights", [
-        {"original": "You're always lazy.", "category": "Judgmental", "explanation": "It labels the child negatively.",
-         "suggestion": "I've noticed you seem tired lately, is everything okay?"},
-        {"original": "Stop crying, it’s nothing.", "category": "Dismissive", "explanation": "It invalidates emotions.",
-         "suggestion": "I see you're upset. Do you want to talk about it?"}
-    ])
 
-    # Count categories for chart
+    # Fetch user's insights from the DB
+    c.execute('SELECT original, category, explanation, suggestion FROM insights WHERE user_id = ?', (session['user_id'],))
+    rows = c.fetchall()
+    insights = [
+        {
+            "original": row[0],
+            "category": row[1],
+            "explanation": row[2],
+            "suggestion": row[3]
+        }
+        for row in rows
+    ]
+
+    # Count categories for pie chart
     category_count = {}
     for item in insights:
         cat = item["category"]
         category_count[cat] = category_count.get(cat, 0) + 1
+
+    # Most frequent category
+    most_frequent = max(category_count.items(), key=lambda x: x[1])[0] if category_count else "N/A"
+
+    # Happiness score (assume total lines = harmful lines + good lines)
+    total_lines = len(insights) + session.get("good_lines", 0)  # optionally track "good" lines separately
+    harmful_lines = len(insights)
+    happiness_score = max(0, 100 - int((harmful_lines / total_lines) * 100)) if total_lines else 100
 
     conn.close()
 
@@ -58,11 +72,14 @@ def profile():
             username=user[1],
             role=user[2],
             insights=insights,
-            category_count=category_count
+            category_count=category_count,
+            most_frequent=most_frequent,
+            happiness_score=happiness_score
         )
     else:
         flash('User not found.', 'danger')
         return redirect(url_for('index'))
+
 
 # Chat with GPT
 @app.route('/chat', methods=['GET', 'POST'])
@@ -89,8 +106,10 @@ def analyze_page():
 # Analyze multiple lines and return structured JSON (POST)
 @app.route('/analyze', methods=['POST'])
 def analyze():
-    results = []
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
 
+    results = []
     uploaded_file = request.files.get('file')
     input_text = request.form.get('message', '')
 
@@ -99,6 +118,15 @@ def analyze():
         input_text += '\n' + content
 
     lines = [line.strip() for line in input_text.split('\n') if line.strip()]
+
+    # Remove old analysis for the user
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('DELETE FROM insights WHERE user_id = ?', (session['user_id'],))
+    conn.commit()
+
+    # Track good lines too (optional)
+    good_lines = 0
 
     for line in lines:
         prompt = f"""
@@ -119,8 +147,6 @@ def analyze():
         )
 
         raw = response.choices[0].message.content
-
-        # Extract parts from response
         category = extract_section(raw, "Category")
         explanation = extract_section(raw, "Explanation")
         suggestion = extract_section(raw, "Suggested Alternative")
@@ -133,7 +159,26 @@ def analyze():
                 "suggestion": suggestion
             })
 
+            # Store in database
+            c.execute('''
+                INSERT INTO insights (user_id, original, category, explanation, suggestion)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (
+                session['user_id'],
+                line,
+                category,
+                explanation,
+                suggestion
+            ))
+        else:
+            good_lines += 1  # Track positive lines
+
+    conn.commit()
+    conn.close()
+
+    session['good_lines'] = good_lines  # Store in session for happiness score (optional)
     return jsonify({"results": results})
+
 
 # Helper function to extract structured parts from GPT output
 def extract_section(text, keyword):
