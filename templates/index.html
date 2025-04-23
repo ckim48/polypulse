@@ -8,6 +8,7 @@
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
 
   <!-- AOS CSS -->
   <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
@@ -91,20 +92,55 @@
       color: white;
     }
 
-    /* About */
-    .about-section {
-      background: linear-gradient(to right, #f8fafc, #e0f2fe);
-      padding: 80px 20px;
-    }
+.about-section-modern {
+  position: relative;
+  background: linear-gradient(to bottom, #f8fafc, #f0f9ff);
+  padding: 100px 20px;
+  overflow: hidden;
+}
 
-    .about-section h3 {
-      color: #1e293b;
-    }
+.about-img-wrapper {
+  position: relative;
+  z-index: 2;
+}
 
-    .about-section p {
-      font-size: 1rem;
-      line-height: 1.7;
-    }
+.about-bg-circle {
+  position: absolute;
+  top: -20%;
+  left: -10%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle at center, #3b82f6 0%, transparent 70%);
+  opacity: 0.15;
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.about-label {
+  display: inline-block;
+  background: linear-gradient(to right, #6366f1, #3b82f6);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 6px 16px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+}
+
+.about-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 24px;
+  line-height: 1.3;
+}
+
+.about-text {
+  color: #475569;
+  font-size: 1rem;
+  line-height: 1.8;
+  margin-bottom: 18px;
+}
 
     /* Info Section */
     .info-section {
@@ -133,6 +169,269 @@
       left: 0;
       z-index: 0 !important;
     }
+
+    .glass-effect {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  padding: 30px 20px;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+}
+
+.glass-effect:hover {
+  transform: scale(1.03);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+}
+
+.icon-box i {
+  font-size: 2.8rem;
+  color: #3b82f6;
+  background: linear-gradient(145deg, #e0f2ff, #f0f9ff);
+  padding: 16px;
+  border-radius: 50%;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
+}
+.info-section-modern {
+  background: linear-gradient(to bottom right, #f0f9ff, #e0f2fe);
+  padding: 100px 20px;
+  overflow: hidden;
+}
+
+.section-title {
+  position: relative;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 60px;
+  display: inline-block;
+  line-height: 1.2;
+  z-index: 1;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.section-title::after {
+  content: '';
+  display: block;
+  height: 4px;
+  width: 80px;
+  background: linear-gradient(to right, #3b82f6, #60a5fa);
+  border-radius: 999px;
+  margin: 16px auto 0;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+}
+
+.section-subtitle {
+  display: block;
+  font-size: 1rem;
+  font-weight: 400;
+  color: #64748b;
+  margin-top: 14px;
+}
+
+.info-section-modern {
+  position: relative;
+  background: linear-gradient(to bottom right, #f0f9ff, #e0f2fe);
+  padding: 100px 20px;
+  overflow: hidden;
+}
+
+.section-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 60px;
+}
+
+.bubble-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 50px;
+  position: relative;
+  z-index: 2;
+}
+
+.bubble {
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(circle at top left, #3b82f6, #60a5fa);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 25px;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(59, 130, 246, 0.3);
+  animation: float 5s ease-in-out infinite;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.bubble:hover {
+  transform: scale(1.07);
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+}
+
+.bubble i {
+  font-size: 2.4rem;
+  margin-bottom: 10px;
+}
+
+.bubble-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: white;
+}
+
+.bubble p {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Float animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Sparkle animation */
+.info-section-modern::before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px);
+  background-size: 30px 30px;
+  animation: sparkleMove 40s linear infinite;
+  z-index: 1;
+  opacity: 0.3;
+}
+
+@keyframes sparkleMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 1000px 1000px; }
+}
+.about-bg-circle-alt {
+  top: auto;
+  bottom: -15%;
+  left: auto;
+  right: -15%;
+  background: radial-gradient(circle at center, #60a5fa 0%, transparent 70%);
+}
+.about p {
+  text-align:justify
+}
+.about-section-heading {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 20px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.about-section-subtitle {
+  font-size: 1rem;
+  color: #64748b;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+.btn-hero-lg {
+  font-size: 0.9rem !important;
+  font-weight: 700 !important;
+  padding: 12px 19px !important;
+  border-radius: 999px;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+}
+
+.btn-hero-primary {
+  background: linear-gradient(to right, #3b82f6, #2563eb);
+  color: #fff !important;
+  border: 1px solid #3b82f6;
+  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+}
+
+.btn-hero-primary:hover {
+  background: linear-gradient(to right, #2563eb, #1d4ed8);
+  transform: scale(1.05);
+  box-shadow: 0 12px 30px rgba(59, 130, 246, 0.6);
+}
+
+.btn-hero-secondary {
+  background: #ffffff !important;
+  color: #2563eb;
+  border: 2px solid #2563eb;
+}
+
+.btn-hero-secondary:hover {
+  background: #2563eb;
+  color: #fff;
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+}
+
+.contact-section-modern {
+  background: linear-gradient(to bottom right, #e0f2fe, #f0f9ff);
+  padding: 80px 20px;
+}
+
+.contact-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.contact-subtitle {
+  font-size: 1rem;
+  color: #64748b;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.contact-email-box {
+  display: inline-flex;
+  align-items: center;
+  background: white;
+  border: 2px solid #3b82f6;
+  color: #2563eb;
+  padding: 12px 21px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
+  transition: all 0.3s ease;
+}
+
+.contact-email-box:hover {
+  background: #3b82f6;
+  color: white;
+  transform: translateY(-3px);
+}
+
+.contact-email-box i {
+  font-size: 1.0rem;
+}
+
+.contact-email-box a {
+  color: inherit;
+  text-decoration: none;
+}
+    .logo-text {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.8rem;
+  color: black;
+  text-decoration: none;
+  transition: 0.2s ease;
+}
   </style>
 </head>
 <body>
@@ -145,66 +444,103 @@
       <p data-aos="fade-up" data-aos-delay="100">
         Analyze text and images, detect harmful tones, and foster supportive communication—designed for families and educators.
       </p>
-      <div class="mt-4" data-aos="fade-up" data-aos-delay="200">
-        <a href="#about" class="btn btn-primary-custom">Get Started</a>
-        <a href="#learn" class="btn btn-outline-custom">Learn More</a>
-      </div>
+<div class="mt-4 d-flex flex-column flex-md-row justify-content-center gap-3" data-aos="fade-up" data-aos-delay="200">
+  <a href="{{url_for('analyze')}}" class="btn btn-hero-lg btn-hero-primary">Get Started</a>
+  <a href="#about" class="btn btn-hero-lg btn-hero-secondary">Learn More</a>
+</div>
+
     </div>
   </div>
 </div>
-
-<!-- About Us Section -->
-<section class="about-section" id="about">
+<section class="about-section-modern" id="about">
   <div class="container">
-    <div class="row align-items-center g-5">
-      <div class="col-md-6" data-aos="fade-right">
-        <img src="about.jpg" alt="About PolyPulse" class="img-fluid rounded-4 shadow">
+    <div class="text-center mb-5" data-aos="fade-up">
+  <h2 class="about-section-heading"><span class="logo-text2" style="font-size:2.8rem !important;">PolyPulse</span></h2>
+  <p class="about-section-subtitle">Revolutionizing communication through emotional intelligence and AI</p>
+</div>
+
+    <div class="row align-items-center g-5 mb-5">
+      <div class="col-lg-6" data-aos="fade-right">
+        <div class="about-img-wrapper">
+          <img src="../static/img/about.jpg" alt="About PolyPulse" class="img-fluid rounded-5 shadow-lg">
+          <div class="about-bg-circle"></div>
+        </div>
       </div>
-      <div class="col-md-6" data-aos="fade-left" data-aos-delay="100">
-        <h3 class="fw-bold mb-3">About PolyPulse</h3>
-        <p class="text-muted">
-          At PolyPulse, we believe in building stronger emotional connections through better communication.
-          Our platform analyzes both text and images for emotionally harmful language and suggests kinder, more empathetic alternatives.
+      <div class="col-lg-6" data-aos="fade-left" data-aos-delay="100">
+        <span class="about-label"> Our Mission</span>
+        <h3 class="about-title">Fostering Emotionally Intelligent Communication</h3>
+        <p class="about-text">
+          PolyPulse bridges the gap between technology and emotional connection. By using AI-powered tools, we help families and educators identify and improve emotional language patterns in everyday conversations.
         </p>
-        <p class="text-muted">
-          Designed for families, educators, and therapists, our AI fosters emotional intelligence in daily life.
+        <p class="about-text">
+          Whether you're teaching, parenting, or simply trying to understand others better, PolyPulse provides the insights you need for more thoughtful, caring dialogue.
+        </p>
+      </div>
+    </div>
+
+    <!-- Row 2 -->
+    <div class="row align-items-center g-5 flex-lg-row-reverse mt-lg-5">
+      <div class="col-lg-6" data-aos="fade-left">
+        <div class="about-img-wrapper">
+          <img src="../static/img/about2.jpg" alt="PolyPulse in Action" class="img-fluid rounded-5 shadow-lg">
+          <div class="about-bg-circle about-bg-circle-alt"></div>
+        </div>
+      </div>
+      <div class="col-lg-6" data-aos="fade-right" data-aos-delay="100">
+        <span class="about-label">Why It Matters</span>
+        <h3 class="about-title">Empowering Conversations That Heal</h3>
+        <p class="about-text">
+          We believe that emotional clarity can change lives. Miscommunication often leads to tension, especially among families, students, and care teams. Our AI analyzes tone and sentiment to offer gentle feedback and positive phrasing suggestions.
+        </p>
+        <p class="about-text">
+          With every message analyzed, we're helping users build a more supportive, emotionally aware future—one sentence at a time.
         </p>
       </div>
     </div>
   </div>
 </section>
-<!-- Info Section -->
-<section class="info-section" id="learn">
-  <div class="container">
-    <h4 class="mb-5" data-aos="fade-up">What Can You Do with PolyPulse?</h4>
-    <div class="row g-4">
-      <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
-        <div class="card info-card h-100">
-          <div class="mb-3">
-            <i class="bi bi-journal-text" style="font-size: 2rem; color: #3b82f6;"></i>
-          </div>
-          <h5>Text Analysis</h5>
-          <p>Paste or upload text and receive feedback on emotional tone and healthier phrasing.</p>
-        </div>
+
+
+
+
+<section class="info-section-modern" id="learn">
+  <div class="container text-center">
+<h4 class="section-title" data-aos="fade-up">
+  Explore What You Can Do
+  <span class="section-subtitle">Enhance emotional awareness through AI-driven tools</span>
+</h4>
+    <div class="bubble-grid">
+      <div class="bubble" data-aos="zoom-in" data-aos-delay="100">
+        <i class="bi bi-journal-text"></i>
+        <h5 class="bubble-title">Text Analysis</h5>
+        <p>Analyze emotional tone in text for healthier communication.</p>
       </div>
-      <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
-        <div class="card info-card h-100">
-          <div class="mb-3">
-            <i class="bi bi-image" style="font-size: 2rem; color: #3b82f6;"></i>
-          </div>
-          <h5>Image Upload</h5>
-          <p>Use OCR to scan and analyze emotional tone from screenshots and handwritten notes.</p>
-        </div>
+      <div class="bubble" data-aos="zoom-in" data-aos-delay="200">
+        <i class="bi bi-image"></i>
+        <h5 class="bubble-title">Image Upload</h5>
+        <p>Extract and review emotions from images and screenshots.</p>
       </div>
-      <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
-        <div class="card info-card h-100">
-          <div class="mb-3">
-            <i class="bi bi-chat-dots" style="font-size: 2rem; color: #3b82f6;"></i>
-          </div>
-          <h5>GPT Emotional Chat</h5>
-          <p>Talk to an AI chatbot trained to promote positive, empathetic, and solution-focused communication.</p>
-        </div>
+      <div class="bubble" data-aos="zoom-in" data-aos-delay="300">
+        <i class="bi bi-chat-dots"></i>
+        <h5 class="bubble-title">Emotional Chat</h5>
+        <p>Chat with an AI trained to offer supportive, empathetic insights.</p>
       </div>
+      <div class="bubble" data-aos="zoom-in" data-aos-delay="400">
+  <i class="bi bi-emoji-smile"></i>
+  <h5 class="bubble-title">Reflection Feedback</h5>
+  <p>Receive suggestions on how to improve emotional clarity and tone.</p>
+</div>
+
+    </div>
+  </div>
+</section>
+<section class="contact-section-modern" id="contact">
+  <div class="container text-center py-5" data-aos="fade-up">
+    <h2 class="contact-title mb-3">Let's Connect</h2>
+    <p class="contact-subtitle mb-4">Have a question or want to collaborate? Reach out anytime.</p>
+    <div class="contact-email-box mx-auto">
+      <i class="bi bi-envelope-fill me-2"></i>
+      <a href="mailto:hello@polypulse.ai">hello@polypulse.ai</a>
     </div>
   </div>
 </section>

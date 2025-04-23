@@ -6,6 +6,7 @@ import os
 import re
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = '1234'
@@ -22,6 +23,21 @@ def image_upload():
             text = pytesseract.image_to_string(Image.open(path))
             analysis = gpt_analyze(text)
     return render_template('image_upload.html', analysis=analysis)
+@app.route('/preview-ocr', methods=['POST'])
+def preview_ocr():
+    file = request.files.get('image')
+    if not file:
+        return jsonify({"error": "No image uploaded"}), 400
+
+    path = os.path.join('static', file.filename)
+    file.save(path)
+
+    try:
+        text = pytesseract.image_to_string(Image.open(path))
+        os.remove(path)  # Optional: Clean up temp file
+        return jsonify({"text": text})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/profile')
 def profile():
@@ -98,9 +114,11 @@ def chat():
         messages = [(user_input, reply)]
     return render_template('chat.html', messages=messages)
 
-# Analyze form page (GET)
 @app.route('/analyze', methods=['GET'])
 def analyze_page():
+    if 'user_id' not in session:
+        flash('Please log in to access the analysis tool.', 'warning')
+        return redirect(url_for('login'))
     return render_template('analyze.html')
 
 # Analyze multiple lines and return structured JSON (POST)
@@ -114,8 +132,22 @@ def analyze():
     input_text = request.form.get('message', '')
 
     if uploaded_file:
-        content = uploaded_file.read().decode('utf-8')
-        input_text += '\n' + content
+        filename = secure_filename(uploaded_file.filename)
+        file_ext = os.path.splitext(filename)[1].lower()
+
+        if file_ext in ['.png', '.jpg', '.jpeg', '.bmp', '.tiff']:
+            # Handle image with OCR
+            image_path = os.path.join('static', filename)
+            uploaded_file.save(image_path)
+            ocr_text = pytesseract.image_to_string(Image.open(image_path))
+            input_text += '\n' + ocr_text
+        else:
+            # Handle text file
+            try:
+                content = uploaded_file.read().decode('utf-8')
+                input_text += '\n' + content
+            except UnicodeDecodeError:
+                return jsonify({"error": "Only text or supported image files are allowed."}), 400
 
     lines = [line.strip() for line in input_text.split('\n') if line.strip()]
 
