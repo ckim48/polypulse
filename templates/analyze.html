@@ -6,6 +6,8 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
 
   <style>
     body {
@@ -15,13 +17,29 @@
       padding: 0;
     }
 
-    .chat-box {
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-      padding: 35px;
-      height: 100%;
-    }
+.chat-box {
+  background: linear-gradient(145deg, #ffffff, #f8fafc);
+  border-radius: 24px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.06);
+  padding: 40px 30px;
+  height: 100%;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  position: relative;
+  animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 
     .chat-input {
       height: 120px;
@@ -39,9 +57,10 @@
     }
 
     .btn-custom {
+      display: block;
+      margin: 0 auto;
       margin-top: 15px;
       background-color: #1d4ed8;
-      font-size: 17px;
       padding: 12px;
       border-radius: 10px;
       font-weight: 600;
@@ -55,11 +74,13 @@
     }
 
     .btn-preview {
+      display: block;
+      margin: 0 auto;
       background-color: #64748b;
       color: white;
       border: none;
       border-radius: 8px;
-      margin-top: 10px;
+      margin-top: 35px;
       padding: 8px 12px;
       font-weight: 500;
     }
@@ -109,6 +130,9 @@
       color: #64748b;
       font-size: 18px;
     }
+    .bg-gray{
+    background-color:#64748b;
+    }
 
     #previewText {
       white-space: pre-wrap;
@@ -120,6 +144,16 @@
       font-size: 15px;
       color: #334155;
     }
+        .logo-text2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.8rem;
+  color: black;
+  text-decoration: none;
+  transition: 0.2s ease;
+}
+    .w-70{
+      width: 70%;
+    }
   </style>
 </head>
 <body>
@@ -127,30 +161,44 @@
 {% include 'nav.html' %}
 
 <div class="container my-5">
+  <div class="text-center mb-4">
+  <h3 class="fw-bold" style="font-size: 1.9rem;" data-aos="fade-up">
+    <span class="logo-text2" style="font-weight:700 !important; font-size:35px;">PolyPulse</span> Insight Tool
+  </h3 >
+  <p class="text-muted" style="font-size: 1rem;"  data-aos="fade-up">
+    Analyze your text or image-based messages to detect emotionally harmful expressions.<br>
+    Get constructive suggestions for more supportive communication in families or groups.
+  </p>
+</div>
+
   <div class="row">
     <!-- Left Column: Chat Input -->
-    <div class="col-md-6 mb-4">
+    <div class="col-md-6 mb-4"  data-aos="fade-right" data-aos-delay="500">
       <div class="chat-box h-100">
-        <h3 class="text-center mb-4"><span class="logo-text">PolyPulse</span> Emotional Analyzer</h3>
+<!--        <h3 class="text-center mb-4"><span class="logo-text">PolyPulse</span> Emotional Analyzer</h3>-->
         <form id="analyzeForm">
           <textarea class="form-control chat-input" name="message" placeholder="Type or paste your message here..." id="messageInput"></textarea>
 
           <label class="upload-label">Upload file (.txt or image):</label>
           <input class="form-control" type="file" name="file" id="fileInput" accept=".txt,image/*">
 
-          <button type="button" class="btn-preview w-100" onclick="previewContent()">Preview</button>
+<button type="button" class="btn-preview w-70" onclick="previewContent()">
+  <i class="bi bi-eye me-2"></i> Preview
+</button>
 
-          <div id="previewText" style="display:none;"></div>
+<div id="previewText" style="display:none;"></div>
 
-          <button class="btn-custom w-100" type="submit">
-            🔍 Analyze Emotional Content
+<button class="btn-custom w-70" type="submit">
+  <i class="bi bi-search-heart me-2"></i> Analyze Emotional Content
+</button>
+
           </button>
         </form>
       </div>
     </div>
 
     <!-- Right Column: Results -->
-    <div class="col-md-6">
+    <div class="col-md-6"  data-aos="fade-left" data-aos-delay="500">
       <div id="resultArea">
         <div class="placeholder-card  mt-md-5">
           Analysis results will appear here after you submit a message or upload a file.
@@ -159,20 +207,22 @@
     </div>
   </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <!-- Bootstrap JS Bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    function getCategoryColor(category) {
-    switch (category.toLowerCase()) {
-      case 'judgmental': return 'danger';
-      case 'dismissive': return 'warning';
-      case 'shaming': return 'secondary';
-      case 'manipulative': return 'dark';
-      default: return 'primary'; // fallback
-    }
+function getCategoryColor(category) {
+  switch (category.trim().toLowerCase()) {
+    case 'judgmental': return 'danger';
+    case 'dismissive': return 'warning';
+    case 'shaming': return 'secondary';
+    case 'manipulative': return 'dark';
+    default: return 'primary'; // fallback
   }
+}
+
   // Preview content function
 function previewContent() {
     const fileInput = document.getElementById('fileInput');
@@ -256,7 +306,7 @@ data.results.forEach((r, i) => {
     <h2 class="accordion-header" id="heading${i}">
       <button class="accordion-button collapsed d-flex justify-content-between align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${i}" aria-expanded="false" aria-controls="collapse${i}">
         <span>${r.original}</span>
-        <span class="badge bg-${getCategoryColor(r.category)} ms-2">${r.category}</span>
+        <span class="badge bg-gray ms-2">${r.category}</span>
       </button>
     </h2>
     <div id="collapse${i}" class="accordion-collapse collapse" aria-labelledby="heading${i}" data-bs-parent="#resultArea">
@@ -272,6 +322,8 @@ data.results.forEach((r, i) => {
 
 
         resultArea.appendChild(accordion);
+
+
       } else if (data.analysis) {
         resultArea.innerHTML = `
           <div class="accordion-item">
@@ -329,6 +381,15 @@ data.results.forEach((r, i) => {
 }
 
 </script>
+<!-- AOS JS -->
+<script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+<script>
+  AOS.init({
+    duration: 800, // animation duration in ms
+    once: true     // only animate once
+  });
+</script>
+
 
 </body>
 </html>

@@ -11,6 +11,7 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 app.secret_key = '1234'
 # Initialize OpenAI client
+
 # OCR and analysis
 @app.route('/image-upload', methods=['GET', 'POST'])
 def image_upload():
@@ -281,6 +282,10 @@ def signup():
 
     return render_template('signup.html')
 
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    return redirect(url_for('index'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
