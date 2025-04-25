@@ -345,7 +345,7 @@ def signup():
     return render_template('signup.html')
 
 
-@app.route('/logout', methods=['POST'])
+@app.route('/logout', methods=['GET','POST'])
 def logout():
     return redirect(url_for('index'))
 
