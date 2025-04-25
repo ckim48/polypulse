@@ -39,7 +39,6 @@ def preview_ocr():
         return jsonify({"text": text})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 @app.route('/profile')
 def profile():
     if 'user_id' not in session:
@@ -49,53 +48,97 @@ def profile():
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
 
-    # Fetch user information
+    # Fetch user info
     c.execute('SELECT name, username, role FROM users WHERE id = ?', (session['user_id'],))
     user = c.fetchone()
 
-    # Fetch user's insights from the DB
+    # Fetch insights
     c.execute('SELECT original, category, explanation, suggestion FROM insights WHERE user_id = ?', (session['user_id'],))
     rows = c.fetchall()
-    insights = [
-        {
-            "original": row[0],
-            "category": row[1],
-            "explanation": row[2],
-            "suggestion": row[3]
-        }
-        for row in rows
-    ]
+    insights = [{
+        "original": row[0],
+        "category": row[1],
+        "explanation": row[2],
+        "suggestion": row[3]
+    } for row in rows]
 
-    # Count categories for pie chart
-    category_count = {}
-    for item in insights:
-        cat = item["category"]
-        category_count[cat] = category_count.get(cat, 0) + 1
+    # Count top categories
+    from collections import Counter, defaultdict
+    category_counter = Counter(item["category"] for item in insights)
+    most_common_categories = category_counter.most_common(4)
+    other_count = sum(count for cat, count in category_counter.items() if (cat, count) not in most_common_categories)
 
-    # Most frequent category
-    most_frequent = max(category_count.items(), key=lambda x: x[1])[0] if category_count else "N/A"
+    category_count = dict(most_common_categories)
+    if other_count > 0:
+        category_count["Other"] = other_count
 
-    # Happiness score (assume total lines = harmful lines + good lines)
-    total_lines = len(insights) + session.get("good_lines", 0)  # optionally track "good" lines separately
+    most_frequent = most_common_categories[0][0] if most_common_categories else "N/A"
+    total_lines = len(insights) + session.get("good_lines", 0)
     harmful_lines = len(insights)
     happiness_score = max(0, 100 - int((harmful_lines / total_lines) * 100)) if total_lines else 100
 
+    # Category trend over time
+    c.execute('SELECT timestamp, category FROM insights WHERE user_id = ? ORDER BY timestamp ASC', (session['user_id'],))
+    time_category_data = c.fetchall()
+
+    from datetime import datetime
+    timeline = defaultdict(lambda: defaultdict(int))
+
+    for ts, cat in time_category_data:
+        date = datetime.strptime(ts, '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d')
+        key = cat if cat in category_count else "Other"
+        timeline[date][key] += 1
+
+    dates = sorted(timeline.keys())
+
+    trend_data = {
+        "labels": dates,
+        "datasets": [
+            {
+                "label": cat,
+                "data": [timeline[d].get(cat, 0) for d in dates]
+            } for cat in category_count
+        ]
+    }
+    total_per_date = [sum(timeline[d].values()) for d in dates]
+
+    trend_data = {
+        "labels": dates,
+        "data": total_per_date
+    }
+    # Sentiment chart
+    c.execute('SELECT sentiment, COUNT(*) FROM insights WHERE user_id = ? GROUP BY sentiment', (session['user_id'],))
+    sentiment_counts = dict(c.fetchall())
+
+    # Line length distribution
+    c.execute('SELECT LENGTH(original) FROM insights WHERE user_id = ?', (session['user_id'],))
+    lengths = [l[0] for l in c.fetchall()]
+    bins = [0]*6
+    for l in lengths:
+        if l < 20: bins[0] += 1
+        elif l < 40: bins[1] += 1
+        elif l < 60: bins[2] += 1
+        elif l < 80: bins[3] += 1
+        elif l < 100: bins[4] += 1
+        else: bins[5] += 1
+    length_bins = ['<20', '20-39', '40-59', '60-79', '80-99', '100+']
+
     conn.close()
 
-    if user:
-        return render_template(
-            'profile.html',
-            name=user[0],
-            username=user[1],
-            role=user[2],
-            insights=insights,
-            category_count=category_count,
-            most_frequent=most_frequent,
-            happiness_score=happiness_score
-        )
-    else:
-        flash('User not found.', 'danger')
-        return redirect(url_for('index'))
+    return render_template(
+        'profile.html',
+        name=user[0],
+        username=user[1],
+        role=user[2],
+        insights=insights,
+        category_count=category_count,
+        most_frequent=most_frequent,
+        happiness_score=happiness_score,
+        trend_data=trend_data,
+        sentiment_counts=sentiment_counts,
+        length_bins=length_bins,
+        bins=bins
+    )
 
 
 # Chat with GPT
@@ -191,18 +234,37 @@ def analyze():
                 "explanation": explanation,
                 "suggestion": suggestion
             })
+            # Add this inside your for-loop in /analyze
+            sentiment_prompt = f"""
+            Evaluate the sentiment of this line in a family context:
 
-            # Store in database
+            "{line}"
+
+            Respond with one word only: Positive, Neutral, or Negative.
+            """
+
+            sentiment_response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[{"role": "user", "content": sentiment_prompt}]
+            )
+            sentiment = sentiment_response.choices[0].message.content.strip().capitalize()
+
+            from datetime import datetime
+            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
             c.execute('''
-                INSERT INTO insights (user_id, original, category, explanation, suggestion)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO insights (user_id, original, category, explanation, suggestion, timestamp, sentiment)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             ''', (
                 session['user_id'],
                 line,
                 category,
                 explanation,
-                suggestion
+                suggestion,
+                now,
+                sentiment
             ))
+
         else:
             good_lines += 1  # Track positive lines
 

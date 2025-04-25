@@ -2,194 +2,275 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>PolyPulse | My Profile</title>
+  <title>PolyPulse | Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
-
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
   <style>
-  .profile-card {
-    border-radius: 1rem;
-  }
-  .section-title {
-    font-weight: 600;
-    font-size: 1.3rem;
-    margin-bottom: 1rem;
-  }
-  #insightChart {
-    width: 100% !important;
-    height: auto !important;
-  }
+    body {
+      background: linear-gradient(to right, #f8fafc, #e2e8f0);
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
 
-    .table {
-  border-collapse: separate;
-  border-spacing: 0 0.4rem;
+    .dashboard-title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 2rem;
+    }
 
-}
-.table td,
-.table th {
-  background-color: #fff !important;
-  border: none;
-  padding: 1rem 1rem; /* Add spacing inside cells */
-  vertical-align: middle;
+    .card {
+      border-radius: 1rem;
+      border: none;
+    }
+
+    .stat-card {
+      background: #ffffff;
+      padding: 1.5rem;
+      text-align: center;
+      border-radius: 1rem;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+    }
+
+    .stat-icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .section-title {
+      font-weight: 600;
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+    }
+
+    .profile-summary {
+      background: linear-gradient(to right, #e0f2fe, #f8fafc);
+    }
+
+    .table thead th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+    }
+.custom-chart {
+  max-width: 100%;
 }
 
-.table thead th {
-  background-color: #f8f9fa !important;
-  font-weight: 600;
-}
-  .custom-bordered-table {
-    border: 2px solid #dee2e6; /* Bootstrap light border */
-    border-radius: 0.5rem;
-  }
-  .custom-bordered-table th,
-  .custom-bordered-table td {
-    border: none !important; /* Hide inner borders */
-  }
+
+    .chart-container {
+      height: 300px;
+    }
+
+    .badge {
+      font-size: 1rem;
+    }
   </style>
 </head>
 <body>
 {% include 'nav.html' %}
 
-<div class="container py-5">
+<div class="container-fluid px-4 py-5">
+  <div class="text-center mb-4">
+  <h3 class="fw-bold" style="font-size: 1.9rem;" data-aos="fade-up">
+    <span class="logo-text2" style="font-weight:700 !important; font-size:33px;">PolyPulse</span> Dashboard
+  </h3 >
+<p class="text-muted" style="font-size: 1rem;" data-aos="fade-up">
+  Dive into your recent emotional analysis and explore communication insights.<br>
+  Understand harmful expressions, review trends, and discover better ways to connect with others.
+</p>
+
+</div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon text-primary"><i class="bi bi-chat-left-text"></i></div>
+        <div class="fw-medium text-muted">Total Harmful Lines</div>
+        <div class="fs-4 fw-bold">{{ insights|length }}</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon text-warning"><i class="bi bi-tags"></i></div>
+        <div class="fw-medium text-muted">Top Category</div>
+        <div class="fs-5 fw-semibold">{{ most_frequent }}</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="stat-icon text-success"><i class="bi bi-emoji-smile"></i></div>
+        <div class="fw-medium text-muted">Happiness Score</div>
+        <div class="fs-4">
+          {% if happiness_score >= 80 %}
+            <span class="badge bg-success">{{ happiness_score }}%</span>
+          {% elif happiness_score >= 50 %}
+            <span class="badge bg-warning text-dark">{{ happiness_score }}%</span>
+          {% else %}
+            <span class="badge bg-danger">{{ happiness_score }}%</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card profile-summary">
+        <div class="fw-medium mb-2"><i class="bi bi-person-circle me-2"></i>Profile</div>
+        <div><strong>{{ name }}</strong> ({{ role }})</div>
+        <div class="text-muted">@{{ username }}</div>
+        <a href="{{ url_for('analyze') }}" class="btn btn-outline-primary btn-sm mt-2">Back to Analyze</a>
+      </div>
+    </div>
+  </div>
+
+  {% if insights %}
   <div class="row g-4">
-    <!-- Left Column: Profile Info -->
-    <div class="col-md-4">
-      <div class="card shadow profile-card p-4">
-        <div class="section-title">
-          <i class="bi bi-person-circle me-2"></i>Profile Information
+    <div class="col-12">
+      <div class="card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="section-title mb-0"><i class="bi bi-table me-2"></i>Insights Table</div>
+          <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#insightTableCollapse" aria-expanded="false" aria-controls="insightTableCollapse">
+            Toggle Table
+          </button>
         </div>
-        <ul class="list-group list-group-flush">
-          <li class="list-group-item"><strong>Name:</strong> {{ name }}</li>
-          <li class="list-group-item"><strong>Username:</strong> {{ username }}</li>
-          <li class="list-group-item"><strong>Role:</strong> {{ role }}</li>
-        </ul>
-        <a href="{{ url_for('analyze') }}" class="btn btn-outline-primary mt-4">
-          <i class="bi bi-search me-1"></i>Back to Analyze
-        </a>
-      </div>
-<div class="card mt-4 shadow rounded-4 border-0 p-4">
-  <div class="d-flex align-items-center mb-3">
-    <i class="bi bi-graph-up-arrow me-2 text-primary fs-4"></i>
-    <h5 class="mb-0 fw-semibold">Last Analysis Summary</h5>
-  </div>
-  <ul class="list-unstyled mb-0 ps-1">
-    <li class="mb-2">
-      <span class="fw-medium text-secondary">Total Harmful Lines:</span>
-      <span class="fw-semibold text-dark">{{ insights|length }}</span>
-    </li>
-    <li class="mb-2">
-      <span class="fw-medium text-secondary">Most Frequent Category:</span>
-      <span class="fw-semibold text-dark">{{ most_frequent }}</span>
-    </li>
-    <li class="mb-3">
-      <span class="fw-medium text-secondary">Happiness Score:</span>
-    </li>
-    <li>
-      <div class="text-center">
-        {% if happiness_score >= 80 %}
-          <i class="bi bi-emoji-smile text-success fs-1 bounce"></i><br>
-          <span class="badge bg-success fs-6 mt-2 px-4 py-2">{{ happiness_score }}%</span>
-        {% elif happiness_score >= 50 %}
-          <i class="bi bi-emoji-neutral text-warning fs-1 bounce"></i><br>
-          <span class="badge bg-warning text-dark fs-6 mt-2 px-4 py-2">{{ happiness_score }}%</span>
-        {% else %}
-          <i class="bi bi-emoji-frown text-danger fs-1 bounce"></i><br>
-          <span class="badge bg-danger fs-6 mt-2 px-4 py-2">{{ happiness_score }}%</span>
-        {% endif %}
-      </div>
-    </li>
-  </ul>
-</div>
-
-
-
-    </div>
-
-
-
-
-    <!-- Right Column: Family Insight -->
-    <div class="col-md-8">
-      <div class="card shadow profile-card p-4 bg-light">
-        <div class="section-title">
-          <i class="bi bi-chat-dots me-2"></i>Family Harmony Insights
-        </div>
-
-        {% if insights %}
-          <div style="max-width: 350px; margin: 0 auto;">
-            <canvas id="insightChart"></canvas>
+        <div class="collapse" id="insightTableCollapse">
+          <div class="table-responsive mt-3">
+            <table class="table table-striped align-middle">
+              <thead>
+                <tr>
+                  <th>Line</th>
+                  <th>Category</th>
+                  <th>Explanation</th>
+                  <th>Suggestion</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for insight in insights %}
+                <tr>
+                  <td>{{ insight.original }}</td>
+                  <td class="{% if insight.category|lower == 'judgmental' %}text-danger{% elif insight.category|lower == 'dismissive' %}text-warning{% elif insight.category|lower == 'shaming' %}text-secondary{% else %}text-dark{% endif %}">{{ insight.category }}</td>
+                  <td>{{ insight.explanation }}</td>
+                  <td class="text-success">{{ insight.suggestion }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
           </div>
+        </div>
+      </div>
+    </div>
 
-<div class="table-responsive mt-4">
-  <table class="table table-hover table-striped table-sm align-middle table-bordered rounded-3 overflow-hidden shadow-sm custom-bordered-table">
-    <thead class="table-light text-center">
-      <tr>
-        <th scope="col">Line</th>
-        <th scope="col">Category</th>
-        <th scope="col">Explanation</th>
-        <th scope="col">Suggestion</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for insight in insights %}
-      <tr>
-        <td>{{ insight.original }}</td>
-
-<td class="fw-semibold
-  {% if insight.category|lower == 'judgmental' %}text-danger
-  {% elif insight.category|lower == 'dismissive' %}text-warning
-  {% elif insight.category|lower == 'shaming' %}text-secondary
-  {% elif insight.category|lower == 'manipulative' %}text-dark
-  {% else %}text-primary
-  {% endif %}
-">
-  {{ insight.category }}
-</td>
-
-
-        <td>{{ insight.explanation }}</td>
-        <td class="text-success">{{ insight.suggestion }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    <!-- Charts in 2x2 Grid with container size -->
+<div class="col-lg-6">
+  <div class="card p-4 text-center">
+    <div class="section-title"><i class="bi bi-pie-chart me-2"></i>Category Distribution</div>
+    <div class="chart-container"><canvas id="insightChart" class="custom-chart d-block mx-auto"></canvas></div>
+  </div>
 </div>
 
 
-        {% else %}
-          <p>No analysis data yet. Try uploading or analyzing family conversations in the <a href="/analyze">Analyze</a> section.</p>
-        {% endif %}
+    <div class="col-lg-6">
+      <div class="card p-4">
+        <div class="section-title"><i class="bi bi-activity me-2"></i>Category Trend</div>
+        <div class="chart-container"><canvas id="categoryTrendChart" class="custom-chart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card p-4">
+        <div class="section-title"><i class="bi bi-bar-chart me-2"></i>Sentiment Overview</div>
+        <div class="chart-container"><canvas id="sentimentChart" class="custom-chart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card p-4">
+        <div class="section-title"><i class="bi bi-align-top me-2"></i>Line Length Distribution</div>
+        <div class="chart-container"><canvas id="lengthChart" class="custom-chart"></canvas></div>
       </div>
     </div>
   </div>
+  {% else %}
+    <div class="alert alert-warning mt-4">No analysis data yet. Try uploading in the <a href="/analyze">Analyze</a> section.</div>
+  {% endif %}
 </div>
 
 <script>
-  const ctx = document.getElementById('insightChart');
-  const chart = new Chart(ctx, {
+  new Chart(document.getElementById('insightChart'), {
     type: 'pie',
     data: {
       labels: {{ category_count.keys()|list|tojson }},
       datasets: [{
-        label: 'Harmful Categories',
         data: {{ category_count.values()|list|tojson }},
         borderWidth: 1
       }]
     },
     options: {
       responsive: true,
-      plugins: {
-        legend: {
-          position: 'bottom'
-        }
-      }
+      plugins: { legend: { position: 'bottom' } }
     }
   });
+
+new Chart(document.getElementById('categoryTrendChart'), {
+  type: 'line',
+  data: {
+    labels: {{ trend_data.labels | tojson }},
+    datasets: [{
+      label: "Total Harmful Lines",
+      data: {{ trend_data.data | tojson }},
+      borderColor: '#3b82f6',
+      backgroundColor: 'rgba(59,130,246,0.1)',
+      fill: true,
+      tension: 0.4
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false }
+    },
+    scales: { y: { beginAtZero: true } }
+  }
+});
+
+new Chart(document.getElementById('sentimentChart'), {
+  type: 'bar',
+  data: {
+    labels: {{ sentiment_counts.keys() | list | tojson }},
+    datasets: [{
+      data: {{ sentiment_counts.values() | list | tojson }},
+      backgroundColor: ['#60a5fa', '#34d399', '#fbbf24', '#f87171']
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false }
+    },
+    scales: { y: { beginAtZero: true } }
+  }
+});
+
+
+new Chart(document.getElementById('lengthChart'), {
+  type: 'bar',
+  data: {
+    labels: {{ length_bins | tojson }},
+    datasets: [{
+      data: {{ bins | tojson }},
+      backgroundColor: '#38bdf8'
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false }
+    },
+    scales: { y: { beginAtZero: true } }
+  }
+});
+
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 </body>
 </html>
