@@ -347,6 +347,7 @@ def signup():
 
 @app.route('/logout', methods=['GET','POST'])
 def logout():
+    session.clear()
     return redirect(url_for('index'))
 
 @app.route('/login', methods=['GET', 'POST'])
