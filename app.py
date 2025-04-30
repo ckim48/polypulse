@@ -12,6 +12,7 @@ app = Flask(__name__)
 app.secret_key = '1234'
 # Initialize OpenAI client
 
+
 # OCR and analysis
 @app.route('/image-upload', methods=['GET', 'POST'])
 def image_upload():
@@ -201,7 +202,6 @@ def analyze():
     c.execute('DELETE FROM insights WHERE user_id = ?', (session['user_id'],))
     conn.commit()
 
-    # Track good lines too (optional)
     good_lines = 0
 
     for line in lines:
@@ -271,18 +271,16 @@ def analyze():
     conn.commit()
     conn.close()
 
-    session['good_lines'] = good_lines  # Store in session for happiness score (optional)
+    session['good_lines'] = good_lines  
     return jsonify({"results": results})
 
 
-# Helper function to extract structured parts from GPT output
 def extract_section(text, keyword):
     for line in text.splitlines():
         if line.startswith(f"- {keyword}:"):
             return line.replace(f"- {keyword}:", "").strip()
     return ""
 
-# Text analysis using GPT for OCR or bulk input
 def gpt_analyze(text):
     prompt = f"""
     You are an emotional communication expert.
@@ -353,7 +351,7 @@ def logout():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']  # or `username`, depending on your form
+        username = request.form['username']  
         password = request.form['password']
 
         conn = sqlite3.connect('users.db')
